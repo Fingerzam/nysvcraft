@@ -39,7 +39,11 @@ public:
 	void expansionFailed(Unit* base);
 	double expansionStep;
 
-	set<Base*> enemyBases();
+	set<Unit*> getEnemyBases();
+
+	bool hasEnemyBuildings(Region* region);
+	set<Region*> getEnemyRegions();
+	set<Unit*> getEnemyBuildingsOn(Region* region);
 private:
 	bool shouldExpand();
 	BaseLocation* expansionLocation();
@@ -58,6 +62,13 @@ private:
 	int expansionCount;
 	int lastExpanded;
 	int expansionInterval;
+	bool initialized;
 
 	set<BaseLocation*> occupiedBases;
+	set<Unit*> enemyBases;
+	map<Region*, set<Unit*> *> enemyBuildings;
+
+	void initEnemyBuildings();
+	void buildingSeen(Unit* building);
+	void buildingDestroyed();
 };

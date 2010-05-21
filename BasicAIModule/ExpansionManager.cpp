@@ -16,9 +16,17 @@ ExpansionManager::ExpansionManager(Arbitrator::Arbitrator<Unit*, double>* arbitr
 	this->occupiedBases = set<BaseLocation*>();
 	this->enemyBases = set<Unit*>();
 	this->occupiedBases.insert(getStartLocation(Broodwar->self()));
+	this->initialized = false;
+	initEnemyBuildings();
 }
 
 ExpansionManager::~ExpansionManager(void) {
+}
+
+void ExpansionManager::initEnemyBuildings() {
+	foreach (Region* region, BWTA::getRegions()) {
+		enemymyBuildings[region] = new set<Unit*>();
+	}
 }
 
 void ExpansionManager::onOffer(set<Unit*> units) {
@@ -28,6 +36,9 @@ void ExpansionManager::onRevoke(Unit* unit, double bid) {
 }
 
 void ExpansionManager::update() {
+	if (!analyzed) {
+		initEnemyBuildings();
+	}
 	if (shouldExpand()) {
 		expand();
 	}
@@ -110,6 +121,18 @@ void ExpansionManager::onUnitShow(Unit* unit) {
 			enemyBases.insert(unit);
 		}
 	}
+	if (unit->getType().isBuilding()) {
+		buildingSeen(unit);
+	}
+}
+
+void ExpansionManager::buildingSeen(Unit* building) {
+	if (building->getPlayer() != Broodwar->enemy())
+		return;
+	Region* region = BWTA::getRegion(building->getTilePosition());
+	if (enemyBuildings[region]->find(building) != enemyBuildings[region]->end()) {
+		enemyBuildings[region]->insert(building);
+	}
 }
 
 void ExpansionManager::onUnitDestroy(Unit* unit) {
@@ -120,6 +143,33 @@ void ExpansionManager::onUnitDestroy(Unit* unit) {
 			enemyBases.erase(unit);
 		}
 	}
+	if (unit->getType()->isBuilding()) {
+		buildingDestroyed();
+	}
+}
+
+void ExpansionManager::buildingDestroyed(Unit* building) {
+	if (building->getPlayer() != Broodwar->enemy())
+		return;
+	Region* region = BWTA::getRegion(building->getTileLocation());
+	enemyBuildings[region]->erase(building);
+}
+
+bool ExpansionManager::hasEnemyBuildings(Region* region) {
+	return enemyBuildings[region]->size() > 0;
+}
+
+set<Region*> ExpansionManager::getEnemyRegions() {
+	set<Region*> regions = set<Region*>();
+	foreach (Region* region, BWTA::getRegions()) {
+		if (hasEnemyBuildings(region)
+			regions.insert(region);
+	}
+	return regions;
+}
+
+set<Unit*> ExpansionManager::getEnemyBuildingsOn(Region* region) {
+	return set<Unit*>(*(enemyBuildings[region]));
 }
 
 BaseLocation* ExpansionManager::baseLocation(Unit* unit) {
