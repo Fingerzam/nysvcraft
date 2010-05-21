@@ -39,6 +39,7 @@ public:
 	void expansionFailed(Unit* base);
 	double expansionStep;
 
+	set<Base*> enemyBases();
 private:
 	bool shouldExpand();
 	BaseLocation* expansionLocation();

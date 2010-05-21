@@ -2,11 +2,6 @@
 
 using namespace BWTA;
 
-//TODO: baseManager should not try to expand to enemy bases
-//TODO: baseManager should rebuild destroyed bases
-//TODO: should build assimilator to new bases
-//TODO: should build defense cannons to new bases
-
 ExpansionManager::ExpansionManager(Arbitrator::Arbitrator<Unit*, double>* arbitrator, BuildManager* buildManager,
 								   BaseManager* baseManager, DefenseManager* defenseManager, WorkerManager* workerManager) {
 	this->arbitrator = arbitrator;
@@ -19,6 +14,7 @@ ExpansionManager::ExpansionManager(Arbitrator::Arbitrator<Unit*, double>* arbitr
 	this->expansionInterval = 1000;
 	this->expansionStep = 1.8;
 	this->occupiedBases = set<BaseLocation*>();
+	this->enemyBases = set<Unit*>();
 	this->occupiedBases.insert(getStartLocation(Broodwar->self()));
 }
 
@@ -110,6 +106,9 @@ void ExpansionManager::onUnitShow(Unit* unit) {
 	assert(unit);
 	if (unit->getType() == UnitTypes::Protoss_Nexus) {
 		occupiedBases.insert(baseLocation(unit));
+		if (unit->getPlayer() == Broodwar->enemy()) {
+			enemyBases.insert(unit);
+		}
 	}
 }
 
@@ -117,6 +116,9 @@ void ExpansionManager::onUnitDestroy(Unit* unit) {
 	assert(unit);
 	if (unit->getType() == UnitTypes::Protoss_Nexus) {
 		occupiedBases.erase(baseLocation(unit));
+		if (unit->getPlayer() == Broodwar->enemy()) {
+			enemyBases.erase(unit);
+		}
 	}
 }
 
@@ -138,4 +140,8 @@ set<Base*> ExpansionManager::interestingBases() {
 			bases.insert(base);
 	}
 	return bases;
+}
+
+set<Unit*> ExpansionManager::getEnemyBases() {
+	return set<Unit*>(this->enemyBases);
 }
