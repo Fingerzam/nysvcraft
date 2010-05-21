@@ -17,7 +17,7 @@ ExpansionManager::ExpansionManager(Arbitrator::Arbitrator<Unit*, double>* arbitr
 	this->expansionCount = 0;
 	this->lastExpanded = 0;
 	this->expansionInterval = 1000;
-	this->expansionStep = 1.9;
+	this->expansionStep = 1.8;
 	this->occupiedBases = set<BaseLocation*>();
 	this->occupiedBases.insert(getStartLocation(Broodwar->self()));
 }
@@ -39,10 +39,9 @@ void ExpansionManager::update() {
 
 bool ExpansionManager::shouldExpand() {
 	double workersPerMineral = ((double)workerManager->getWorkerCount())/mineralCount();
-	Broodwar->drawTextScreen(450, 25, "workersPerMinerals: %.2f", workersPerMineral);
+	Broodwar->drawTextScreen(450, 25, "workersPerMinerals: %.2f/%.2f", workersPerMineral, expansionStep);
 	int framesFromLastExpand = Broodwar->getFrameCount() - lastExpanded;
-	return (workersPerMineral >= expansionStep || Broodwar->self()->minerals() > 5000)
-		&& framesFromLastExpand > 2500;
+	return (workersPerMineral >= expansionStep || Broodwar->self()->minerals() >= 3000) && framesFromLastExpand > 2500;
 }
 
 int ExpansionManager::mineralCount() {
@@ -60,7 +59,7 @@ void ExpansionManager::expand() {
 	Broodwar->printf("Expand #%d", expansionCount);
 	Base* expansion = baseManager->expand(buildLocation, 100);
 	expansionCount++;
-	expansionStep -= 0.05;
+	expansionStep -= 0.08;
 	lastExpanded = Broodwar->getFrameCount();
 	expansionInterval /= 2;
 	defenseManager->onExpand(expansion);

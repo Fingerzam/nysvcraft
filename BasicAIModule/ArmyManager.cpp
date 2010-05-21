@@ -13,6 +13,7 @@ ArmyManager::ArmyManager(Arbitrator::Arbitrator<BWAPI::Unit*, double>* arbitrato
 	this->defenseManager = defenseManager;
 
 	builtDragoons = false;
+	isRush = false;
 
 	buildOrderManager->build(999999, UnitTypes::Protoss_Zealot, 70);
 	buildOrderManager->build(2, UnitTypes::Protoss_Gateway, 70);
@@ -22,8 +23,18 @@ ArmyManager::~ArmyManager()
 {
 }
 
-void ArmyManager::onOffer(set<Unit*> units) {
+void ArmyManager::rush() {
+	Broodwar->printf("Kekekekekeke");
+	isRush = true;
+	rushStartedOn = Broodwar->getFrameCount();
+}
+
+void ArmyManager::onOffer(set<Unit*> units) {	
 	foreach (Unit* unit, units) {
+		if (isRush) {
+			unit->attackMove(getRushTarget());
+			continue;
+		} 
 		if (recalledAttackers.count(unit)) {
 			arbitrator->accept(this, unit, 200);
 			if (!attackBases.empty())
@@ -40,6 +51,13 @@ void ArmyManager::onOffer(set<Unit*> units) {
 	}
 }
 
+Position ArmyManager::getRushTarget() {
+	if (Broodwar->self()->getStartLocation().y() == 8)
+		return Position(63*TILE_SIZE, 117*TILE_SIZE);
+	else
+		return Position(70*TILE_SIZE, 8*TILE_SIZE);
+}
+
 void ArmyManager::onRevoke(Unit* unit, double bid) {
 	recalled.erase(unit);
 	defenders.erase(unit);		
@@ -49,6 +67,9 @@ void ArmyManager::onRevoke(Unit* unit, double bid) {
 
 void ArmyManager::update() {
 	set<Unit*> units = BWAPI::Broodwar->self()->getUnits();
+
+	if (isRush && Broodwar->getFrameCount() >= rushStartedOn + 1.5*60*25)
+		isRush = false;
 	
 	int completedZealots = buildManager->getCompletedCount(UnitTypes::Protoss_Zealot);
 
@@ -68,12 +89,15 @@ void ArmyManager::update() {
 	}
 
 	foreach (Unit* unit, units) 
-		if (unit->isCompleted() && unit->getType() == UnitTypes::Protoss_Zealot || unit->getType() == UnitTypes::Protoss_Dragoon)
+		if (unit->isCompleted() && unit->getType() == UnitTypes::Protoss_Zealot || unit->getType() == UnitTypes::Protoss_Dragoon)			
 			if (!(attackers.count(unit) || recalledAttackers.count(unit) || recalled.count(unit) || defenders.count(unit))) {
-				if (!attackBases.empty()) {
-					attack(*attackBases.begin());
-				} else 
-					arbitrator->setBid(this, unit, 10);
+				if (isRush && unit->isIdle())
+					unit->attackMove(getRushTarget());
+				else
+					if (!attackBases.empty()) {
+						attack(*attackBases.begin());
+					} else 
+						arbitrator->setBid(this, unit, 10);
 			}
 
 	checkBaseDefenses();
@@ -81,6 +105,8 @@ void ArmyManager::update() {
 
 
 void ArmyManager::checkBaseDefenses() {
+	if (isRush) return;
+
 	foreach (Unit* base, getOurBases()) {
 		if (isUnderAttack(base)) 
 			defendBase(base);
@@ -156,21 +182,24 @@ void ArmyManager::onUnitShow(Unit* unit) {
 
 		Unit* closestUnit = helpers::getClosestUnitFrom(unit->getPosition(), Broodwar->self()->getUnits());
 
-		if (closestUnit->getType() == UnitTypes::Protoss_Dragoon || closestUnit->getType() == UnitTypes::Protoss_Zealot)
+		if (closestUnit->getType() == UnitTypes::Protoss_Dragoon || closestUnit->getType() == UnitTypes::Protoss_Zealot) {
+			Broodwar->printf("THIS IS SPARTAAAAAAAAA!!!!!!!!!");
 			attack(unit);
+		}
 	}
 }
 
 void ArmyManager::attack(Unit* target) {
-	Broodwar->printf("THIS IS SPARTAAAAAAAAAAAAAA");
-
 	set<UnitGroup*> defGroups = defenseManager->getDefenseGroups();
 
 	foreach (UnitGroup* group, defGroups)
 		foreach (Unit* unit, *group) {
 			arbitrator->setBid(this, unit, 200);
-			if (!attackers.count(unit))
+			if (!attackers.count(unit)) {
 				recalledAttackers.insert(unit);
+				defenders.erase(unit);
+				recalled.erase(unit);
+			}
 			attackBases.insert(target);
 		}
 }

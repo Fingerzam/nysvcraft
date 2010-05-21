@@ -21,6 +21,9 @@ public:
 	enum TroopState { IdleTroop, AttackingTroop };
 
 	void onOffer(set<Unit*> units);
+
+	Position getRushTarget();
+
 	void onRevoke(Unit* unit, double bid);
 
 	void update();
@@ -31,6 +34,11 @@ public:
 
 	string getName() const;
 	string getShortName() const;
+
+	void rush();
+
+	bool isRush;
+
 private:
 	void checkBaseDefenses();
 	bool isUnderAttack(Unit* base);
@@ -52,4 +60,5 @@ private:
 	set<Unit*> attackers;
 	set<Unit*> bases;
 	set<Unit*> attackBases;
+	int rushStartedOn;
 };
