@@ -96,7 +96,12 @@ Miten päätökset tehtiin
 
 * BWSAL (joka käyttää BWTA:ta) päätti rakennusten paikat
 * ExpansionManager päätti minne laajennutaan seuraavaksi
-    - TODO: Juhana kertoo miten
+    - Piti kirjaa nähdyistä vihollisen nexuksista (ja tuhoutumisista)
+      ja päätti tämänperusteella mitkä alueet ovat vapaita.
+    - Laajennetaan lähimpään (BWTA:n maaetäisyydellä aloituspaikasta)
+      tukikohtapaikkaan.
+    - Jos probe kuolee matkalla, yritetään myöhemmin uudestaan,
+      mahdollisesti toiseen paikkaan.
 * Battle
     - Dragoon, zealot ja probe -yksiköiden toiminta taistelussa
       päätettiin oman yksikön tyypin ja vastustajien yksiköiden tyyppien
@@ -148,6 +153,14 @@ Mitä jäi toteuttamatta
       meillä 8 dragoonia jotka jäivät kökkimään vihollisen aloituspaikkaan, 
       kunnes sovittiin tasapeliksi
 * Parametrien viilailu sopivaan laajentumistahtiin ja taisteluun
+* Parempi informaation kerääminen
+    - Olisi voitu pitää jossai keskitetysti kirjaa nähdyistä vihollisen
+      rakennuksista ja tukikohdista.
+    - Oltaisiin voitu käydä tarkistamassa tyhjiksi oletetut alueet tasaisin
+      väliajoin.
+    - Oltaisiin voitu päättää järkevämmin hyökkäyskohteita.
+    - Nyt ExpansionManager piti kirjaa osasta tästä informaatiosta, vaikkei
+      se varsinaisesti ollut sen tehtävä.
 
 META
 ====
